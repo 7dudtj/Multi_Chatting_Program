@@ -32,7 +32,7 @@ class ChatClient:  # 텔레마케터
             try:
                 msg = self.soc.recv(1024).decode()  # 사용자가 전송한 메시지 읽음
                 if msg == '/stop':  # 종료 메시지이면 루프 종료
-                    self.soc.sendall(msg)  # 이 메시지를 보낸 한명에게만 전송
+                    self.soc.sendall(msg.encode(encoding='utf-8'))  # 이 메시지를 보낸 한명에게만 전송
                     self.room.delClient(self)
                     break
                 msg = self.id+': '+ msg
@@ -42,7 +42,7 @@ class ChatClient:  # 텔레마케터
                 break
 
     def sendMsg(self, msg):
-        print(type(msg))
+        print(msg)
         self.soc.sendall(msg.encode(encoding='utf-8'))
 
 
