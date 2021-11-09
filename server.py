@@ -47,8 +47,8 @@ class ChatClient:  # 텔레마케터
 
 
 class ChatServer:
-    ip = 'localhost'  # or 본인 ip or 127.0.0.1
-    port = 9999
+    ip = '3.38.153.231'  # or 본인 ip or 127.0.0.1
+    port = 8080
 
     def __init__(self):
         self.server_soc = None  # 서버 소켓(대문)
