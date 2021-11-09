@@ -1,5 +1,5 @@
 import socket, threading
-
+##김연웅
 class Room:  # 채팅방 클래스.
     def __init__(self):
         self.clients = []
