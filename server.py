@@ -42,12 +42,12 @@ class ChatClient:  # 텔레마케터
                 break
 
     def sendMsg(self, msg):
-        print(msg)
+        print("\""+msg+"\"")
         self.soc.sendall(msg.encode(encoding='utf-8'))
 
 
 class ChatServer:
-    ip = '3.38.153.231'  # or 본인 ip or 127.0.0.1
+    ip = 'localhost'
     port = 8080
 
     def __init__(self):

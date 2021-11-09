@@ -5,7 +5,7 @@ import tkinter as tk
 
 class UiChatClient:
     # class 변수 / static 변수 : 모든 객체가 공유
-    ip = '3.38.153.231'
+    ip = 'localhost'
     port = 8080
 
     def __init__(self):
