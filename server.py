@@ -13,7 +13,7 @@ class Room:  # 채팅방 클래스.
 
     def sendMsgAll(self, msg):  # 채팅방에 있는 모든 사람한테 메시지 전송
         for i in self.clients:
-            print(i)
+            print(i.id+"에게 전송")
             i.sendMsg(msg)
 
 
