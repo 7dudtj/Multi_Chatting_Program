@@ -69,7 +69,7 @@ class ChatServer:
             print(addr, '접속')
             c = ChatClient(self.room, client_soc)
             self.room.addClient(c)
-            print('클라:',self.room.clients)
+            # print('클라:',self.room.clients)
             th = threading.Thread(target=c.readMsg)
             th.start()
 
