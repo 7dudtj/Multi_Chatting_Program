@@ -13,7 +13,7 @@ class Room:  # 채팅방 클래스.
 
     def sendMsgAll(self, msg):  # 채팅방에 있는 모든 사람한테 메시지 전송
         for i in self.clients:
-            print(i.id+"에게 전송")
+            print(str(i.id)+"에게 전송")
             i.sendMsg(msg)
 
 
@@ -25,12 +25,14 @@ class ChatClient:  # 텔레마케터
 
     def readMsg(self):
         self.id = self.soc.recv(1024).decode()
+        print(str(self.id) + "한테서 받은 메세지: " + str(self.id))
         msg = self.id + '님이 입장하셨습니다'
         self.room.sendMsgAll(msg)
 
         while True:
             try:
                 msg = self.soc.recv(1024).decode()  # 사용자가 전송한 메시지 읽음
+                print(str(self.id)+"한테서 받은 메세지: "+str(msg))
                 if msg == '/stop':  # 종료 메시지이면 루프 종료
                     self.soc.sendall(msg.encode(encoding='utf-8'))  # 이 메시지를 보낸 한명에게만 전송
                     self.room.delClient(self)
@@ -38,7 +40,7 @@ class ChatClient:  # 텔레마케터
                 msg = self.id+': '+ msg
                 self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
             except ConnectionResetError as e:
-                print(self.id+"가 강제로 종료되었습니다.\n"+str(e))
+                print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
                 break
 
     def sendMsg(self, msg):
@@ -62,11 +64,12 @@ class ChatServer:
 
     def run(self):
         self.open()
-        print('서버 시작11')
+        print('서버 시작')
 
         while True:
+            print('client 접속 대기중')
             client_soc, addr = self.server_soc.accept()
-            print(addr, '접속')
+            print(addr, '접속 성공')
             c = ChatClient(self.room, client_soc)
             self.room.addClient(c)
             # print('클라:',self.room.clients)
