@@ -1,5 +1,4 @@
 import socket, threading
-# pull request test
 
 class Room:  # 채팅방 클래스.
     def __init__(self):
@@ -16,6 +15,7 @@ class Room:  # 채팅방 클래스.
         for i in self.clients:
             print(str(i.id)+"에게 전송")
             i.sendMsg(msg)
+
 
 
 class ChatClient:  # 텔레마케터
@@ -40,8 +40,10 @@ class ChatClient:  # 텔레마케터
                     break
                 msg = self.id+': '+ msg
                 self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
-            except ConnectionResetError as e:
-                print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
+            # except ConnectionResetError as e:
+            except:
+                # print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
+                print(str(self.id) + ": 강제로 종료되었습니다.\n")
                 break
 
     def sendMsg(self, msg):
