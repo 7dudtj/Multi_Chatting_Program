@@ -10,8 +10,7 @@ class UiChatClient:
 
     def __init__(self):
         self.conn_soc = None  # 서버와 연결된 소켓
-        self.win = None # window
-        self.chatCont = None # 대화내역
+        self.wonzt = None # 대화내역
         self.myChat = None # 채팅 입력칸
         self.sendBtn = None # 전송 버튼
         self.allChat =''
