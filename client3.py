@@ -1,84 +1,107 @@
 import threading
-import socket
-import tkinter as tk
+import socket as sc
+import sys
+from PyQt5.QtWidgets import QMainWindow, QFileDialog, QTableWidgetItem, QMessageBox, QApplication
+from PyQt5.QtCore import QThread, pyqtSlot, QCoreApplication
+from PyQt5 import QtCore
+from PyQt5 import uic
 
+ui_form = uic.loadUiType("test.ui")[0]
 
-class UiChatClient:
-    # class 변수 / static 변수 : 모든 객체가 공유
-    ip = 'localhost'
-    port = 8080
+class QtWindow(QMainWindow, ui_form):
 
     def __init__(self):
-        self.conn_soc = None  # 서버와 연결된 소켓
-        self.win = None # window
-        self.chatCont = None # 대화내역
-        self.myChat = None # 채팅 입력칸
-        self.sendBtn = None # 전송 버튼
-        self.allChat =''
+        super().__init__()
+        self.setupUi(self)
 
-    def conn(self):
-        self.conn_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn_soc.connect((UiChatClient.ip, UiChatClient.port))
-        print("서버와 연결했습니다")
-
-    def setWindow(self):
-        self.win = tk.Tk()
-        self.win.title('채팅프로그램')
-        self.win.geometry('400x500+100+100')
-        self.chatCont = tk.Label(self.win, width=50, height=30,
-                                 text='채팅에 사용할 ID를 입력해주세요.')
-        self.myChat = tk.Entry(self.win, width=40)
-        self.sendBtn = tk.Button(self.win, width=10, text='전송')
-
-        self.chatCont.grid(row=0, column=0, columnspan=2)
-        self.myChat.grid(row=1, column=0, padx=10)
-        self.sendBtn.grid(row=1, column=1)
-
-        self.myChat.bind('<Return>', self.sendMsg)
-        print("GUI Open")
+        self.socket = None
+        self.userName = None
+        self.isRun = False
+        self.allChat = ''
 
 
-    def sendMsg(self, e):  # 키보드 입력 받아 상대방에게 메시지 전송
-        msg = self.myChat.get()
-        self.myChat.delete(0, tk.END)
-        self.myChat.config(text='')
-        print("전송하려는 메세지: \""+str(msg)+"\"")
-        msg = msg.encode(encoding='utf-8')
-        # print(self.conn_soc)
-        self.conn_soc.sendall(msg)
-        print('서버로 전송')
+        self.sendButton.clicked.connect(self.send)
+        self.accessButton.clicked.connect(self.connect)
+        self.exitButton.clicked.connect(self.quit)
 
-    def recvMsg(self):  # 상대방이 보낸 메시지 읽어서 화면에 출력
-        print('수신 thread 가동')
-        while True:
-            print('수신 대기중')
-            msg = self.conn_soc.recv(1024).decode()
-            print("서버에서 전송받은 메세지: \""+str(msg)+"\"")
-            msg += '\n'
-            self.allChat += msg
-            print('<채팅내역>\n', self.allChat)
+    def quit(self):
 
-            self.chatCont.config(text=self.allChat)
-            # if msg == '/stop':
+        if self.socket:
+            self.socket.close()
+
+        QCoreApplication.instance().quit()
+        sys.exit(1)
+
+    def send(self, e):
+        if self.isRun:
+            message = self.inputMsg.toPlainText()
+            # self.addChat(message)
+            self.inputMsg.setPlainText("")
+            message = message.encode(encoding='utf-8')
+            try:
+                self.socket.sendall(message)
+                print("메시지 전송")
+            except Exception as e:
+                self.isRun = False
+                QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes,
+                                     QMessageBox.NoButton)
+        else:
+            QMessageBox.question(self, 'Message', '먼저 서버의 IP와, PORT 그리고 사용자 이름을 입력하고 접속해주세요.', QMessageBox.Yes,
+                                 QMessageBox.NoButton)
+            self.inputMsg.setPlainText("")
+
+    def recieveMessage(self):  # 상대방이 보낸 메시지 읽어서 화면에 출력
+        try:
+            print('수신 thread 가동')
+            while True:
+                print('수신 대기중')
+                message = self.socket.recv(1024).decode()
+
+                print("서버에서 전송받은 메세지: \"" + str(message) + "\"")
+
+                self.chatBox.append(str(message) + "\n")
+        except Exception as e:
+            self.isRun = False
+            QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes,
+                                 QMessageBox.NoButton)
+            # self.addChat(message)
+            # if msg == '/stop':Z
             #     self.close()
             #     break
 
-    def run(self):
-        self.conn()
-        self.setWindow()
 
-        th2 = threading.Thread(target=self.recvMsg)
-        th2.start()
-        self.win.mainloop()
+    def addChat(self, msg):
+        self.chatBox.appendPlainText(msg)
 
-    def close(self):
-        self.conn_soc.close()
-        print('종료되었습니다')
+    def connect(self):
+        if self.isRun:
+            QMessageBox.question(self, 'Message', self.userName + '님, 이미 연결중입니다.', QMessageBox.Yes, QMessageBox.NoButton)
 
+        else:
+            try:
+                ip = str(self.inputIp.toPlainText()).strip()
+                port = int(str(self.inputPort.toPlainText()).strip())
+                self.userName = self.inputName.toPlainText().strip()
+                self.socket = sc.socket(sc.AF_INET, sc.SOCK_STREAM)
+                self.socket.connect((ip, port))
+                self.socket.sendall(self.userName.encode(encoding='utf-8'))
+                self.isRun = True
+
+                thread = threading.Thread(target=self.recieveMessage)
+                thread.daemon = True
+                thread.start()
+                print("서버와 연결했습니다")
+            except Exception as e:
+                QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes,
+                                     QMessageBox.NoButton)
 
 def main():
-    conn = UiChatClient()
-    conn.run()
-
+    # conn = UiChatClient()
+    # conn.run()
+    app = QApplication(sys.argv)
+    window = QtWindow()
+    window.setWindowTitle("쵀팅")
+    window.show()
+    app.exec_()
 
 main()

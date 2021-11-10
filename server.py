@@ -40,6 +40,7 @@ class ChatClient:  # 텔레마케터
                 msg = self.id+': '+ msg
                 self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
             except ConnectionResetError as e:
+                self.room.delClient(self)
                 print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
                 break
 
