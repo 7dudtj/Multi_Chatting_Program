@@ -17,6 +17,7 @@ class Room:  # 채팅방 클래스.
             i.sendMsg(msg)
 
 
+
 class ChatClient:  # 텔레마케터
     def __init__(self, r, soc):
         self.room = r  # 채팅방. Room 객체
@@ -34,13 +35,16 @@ class ChatClient:  # 텔레마케터
                 msg = self.soc.recv(1024).decode()  # 사용자가 전송한 메시지 읽음
                 print(str(self.id)+"한테서 받은 메세지: "+str(msg))
                 if msg == '/stop':  # 종료 메시지이면 루프 종료
-                    self.soc.sendall(msg.encode(encoding='utf-8'))  # 이 메시지를 보낸 한명에게만 전송
+                    outmember = self.id
                     self.room.delClient(self)
+                    self.room.sendMsgAll(str(outmember)+"님이 퇴장하셨습니다.")
                     break
                 msg = self.id+': '+ msg
                 self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
-            except ConnectionResetError as e:
-                print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
+            # except ConnectionResetError as e:
+            except:
+                # print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
+                print(str(self.id) + "님이 강제로 종료되었습니다.\n")
                 break
 
     def sendMsg(self, msg):
@@ -76,6 +80,8 @@ class ChatServer:
             th = threading.Thread(target=c.readMsg)
             th.start()
 
+        # for test << 아직 여기에 도달하지 못함
+        print("thread 종료")
         self.server_soc.close()
 
 
