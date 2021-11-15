@@ -1,63 +1,94 @@
-import socket, threading
+import socket
+import threading
 
-class Room:  # 채팅방 클래스.
+################################################################
+class Room:  # Room class
     def __init__(self):
-        self.clients = []
-        self.allChat=None
+        self.chatUsers = [] # 채팅방 접속 유저 리스트 (채팅방)
+        self.waitUsers = [] # 재접속을 기다리는 유저 리스트 (대기열)
 
-    def addClient(self, c):  # c: 텔레마케터 . 클라이언트 1명씩 전담하는 쓰레드
-        self.clients.append(c)
+    def add_chatUser(self, c): # 채팅방에 유저 추가
+        self.chatUsers.append(c)
 
-    def delClient(self, c):
-        self.clients.remove(c)
+    def add_waitUser(self, c): # 대기열에 유저 추가
+        self.waitUsers.append(c)
 
-    def sendMsgAll(self, msg):  # 채팅방에 있는 모든 사람한테 메시지 전송
-        for i in self.clients:
-            print(str(i.id)+"에게 전송")
+    def del_chatUser(self, c): # 채팅방에 유저 삭제 (정상 종료)
+        c.soc.close()
+        self.chatUsers.remove(c)
+
+    def del_waitUser(self, c): # 대기열에서 유저 삭제
+        c.soc.close()
+        self.waitUsers.remove(c)
+
+    def sendMsgAll(self, msg):  # 채팅방에 있는 모든 유저한테 메시지 전송
+        for i in self.chatUsers:
+            print(str(i.userName)+"에게 전송")
             i.sendMsg(msg)
+################################################################
 
 
-
-class ChatClient:  # 텔레마케터
+################################################################
+class chatClient:  # 채팅 유저 클래스
     def __init__(self, r, soc):
-        self.room = r  # 채팅방. Room 객체
-        self.id = None  # 사용자 id
-        self.soc = soc  # 사용자와 1:1 통신할 소켓
+        self.room = r  # 채팅방(Room) 객체
+        self.userName = None  # user name
+        self.soc = soc  # 유저와 1:1로 통신할 소켓
 
     def readMsg(self):
-        self.id = self.soc.recv(1024).decode()
-        print(str(self.id) + "한테서 받은 메세지: " + str(self.id))
-        msg = self.id + '님이 입장하셨습니다'
+        # 유저의 닉네임 받아오기
+        self.userName = self.soc.recv(1024).decode()
+        print(str(self.userName) + "한테서 받은 메세지: " + str(self.userName))
+
+        # 재접속 유저인지 확인
+        reconnect = False
+        for i in self.room.waitUsers: # 'i'는 대기열의 유저
+            if (i.userName == self.userName):
+                reconnect = True
+                self.room.del_waitUser(i) # 대기열에서 삭제
+
+        # 채팅방 재입장
+        if (reconnect):
+            msg = self.userName + '님이 재접속했습니다'
+        # 채팅방 신규입장
+        else:
+            msg = self.userName + '님이 입장하셨습니다'
         self.room.sendMsgAll(msg)
 
+        # 유저의 채팅을 받아오는 부분
         while True:
             try:
-                msg = self.soc.recv(1024).decode()  # 사용자가 전송한 메시지 읽음
-                print(str(self.id)+"한테서 받은 메세지: "+str(msg))
+                msg = self.soc.recv(1024).decode()  # 유저가 전송한 채팅 읽기
+                print(str(self.userName)+"한테서 받은 메세지: "+str(msg))
                 if msg == '/stop':  # 종료 메시지이면 루프 종료
-                    outmember = self.id
-                    self.room.delClient(self)
+                    outmember = self.userName
+                    self.room.del_chatUser(self) # 채팅방에서 퇴장
                     self.room.sendMsgAll(str(outmember)+"님이 퇴장하셨습니다.")
                     break
-                msg = self.id+': '+ msg
+                msg = self.userName+': '+ msg
                 self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
-            except ConnectionResetError as e:
-                self.room.delClient(self)
-                print(str(self.id)+": 강제로 종료되었습니다.\n"+str(e))
+            except Exception as e: # 에러가 발생할 경우
+                outuserName = self.userName # 퇴장 유저의 아이디
+                self.room.del_chatUser(self) # 채팅방에서 퇴장
+                self.room.add_waitUser(self) # 대기열으로 진입
+                self.room.sendMsgAll(str(outuserName)+"님이 접속이 끊겼습니다.")
+                print(str(self.userName)+": 접속이 끊겼습니다.\n"+str(e))
                 break
 
     def sendMsg(self, msg):
         print("\""+msg+"\"")
         self.soc.sendall(msg.encode(encoding='utf-8'))
+################################################################
 
 
+################################################################
 class ChatServer:
     ip = 'localhost'
     port = 8080
 
     def __init__(self):
         self.server_soc = None  # 서버 소켓(대문)
-        self.room = Room()
+        self.room = Room() # 채팅방. 모든 유저와 공유됨
 
     def open(self):
         self.server_soc = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -69,24 +100,23 @@ class ChatServer:
         self.open()
         print('서버 시작')
 
-        while True:
+        while True: # 유저 접속 대기중
             print('client 접속 대기중')
             client_soc, addr = self.server_soc.accept()
             print(addr, '접속 성공')
-            c = ChatClient(self.room, client_soc)
-            self.room.addClient(c)
-            # print('클라:',self.room.clients)
+            c = chatClient(self.room, client_soc) # 유저 객체 생성
+            self.room.add_chatUser(c) # 채팅방에 유저 추가
             th = threading.Thread(target=c.readMsg)
             th.start()
 
-        # for test << 아직 여기에 도달하지 못함
-        print("thread 종료")
-        self.server_soc.close()
+        # 서버는 종료되지 않기에
+        # 소켓을 닫지 않고 계속 가동
+################################################################
 
 
 def main():
-    cs = ChatServer()
-    cs.run()
+    cs = ChatServer() # 서버 생성
+    cs.run() # 서버 가동
 
 
 main()

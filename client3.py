@@ -19,16 +19,21 @@ class QtWindow(QMainWindow, ui_form):
         self.isRun = False
         self.allChat = ''
 
-
         self.sendButton.clicked.connect(self.send)
         self.accessButton.clicked.connect(self.connect)
         self.exitButton.clicked.connect(self.quit)
 
     def quit(self):
+        # 서버에 접속 종료를 알림
+        if self.isRun:
+            message = "/stop".encode(encoding='utf-8')
+            self.socket.sendall(message)
 
+        # 서버와의 연결 종료
         if self.socket:
             self.socket.close()
 
+        # 윈도우 종료
         QCoreApplication.instance().quit()
         sys.exit(1)
 
@@ -46,7 +51,7 @@ class QtWindow(QMainWindow, ui_form):
                 QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes,
                                      QMessageBox.NoButton)
         else:
-            QMessageBox.question(self, 'Message', '먼저 서버의 IP와, PORT 그리고 사용자 이름을 입력하고 접속해주세요.', QMessageBox.Yes,
+            QMessageBox.question(self, 'Message', '먼저 서버의 IP, PORT, 그리고 사용자 이름을 입력하고 접속해주세요.', QMessageBox.Yes,
                                  QMessageBox.NoButton)
             self.inputMsg.setPlainText("")
 
@@ -92,15 +97,14 @@ class QtWindow(QMainWindow, ui_form):
                 thread.start()
                 print("서버와 연결했습니다")
             except Exception as e:
-                QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes,
-                                     QMessageBox.NoButton)
+                QMessageBox.question(self, 'Message', str(e), QMessageBox.Yes, QMessageBox.NoButton)
 
 def main():
     # conn = UiChatClient()
     # conn.run()
     app = QApplication(sys.argv)
     window = QtWindow()
-    window.setWindowTitle("쵀팅")
+    window.setWindowTitle("채팅")
     window.show()
     app.exec_()
 
