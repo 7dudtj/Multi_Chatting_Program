@@ -40,7 +40,7 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
                 self.socket.sendall(self.userName.encode(encoding='utf-8'))
                 self.isRun = True
 
-                thread = threading.Thread(target=self.receive())
+                thread = threading.Thread(target=self.receive)
                 thread.daemon = True
                 thread.start()
                 print("서버와 연결했습니다")
@@ -59,9 +59,33 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
                 print('수신 대기중')
                 message = self.socket.recv(1024).decode()
                 if message == "/text":
-                    self.readMessage()
+                    message = self.socket.recv(1024).decode()
+                    self.chatBox.append(str(message) + "\n")
                 elif message == "/file":
-                    self.readFile()
+                    try:
+                        nowdir = os.getcwd()
+                        fileName = self.socket.recv(1024).decode()
+                        data = self.socket.recv(1024).decode()
+                        with open(nowdir + "\\" + fileName, 'wb') as f:
+                            f.write(data)
+                            while data:
+                                data = self.socket.recv(1024).decode()
+
+                    except FileNotFoundError:
+                        PyQt5.QtWidgets.QMessageBox.question(self, 'Message', '작성하신 파일명과 일치하는 파일이 존재하지 않습니다.',
+                                                             PyQt5.QtWidgets.QMessageBox.Yes,
+                                                             PyQt5.QtWidgets.QMessageBox.NoButton)
+                        self.inputFileName.setPlainText("")
+                    except Exception as e:
+                        PyQt5.QtWidgets.QMessageBox.question(self, 'Message', "파일 수신 실패: " + str(e),
+                                                             PyQt5.QtWidgets.QMessageBox.Yes,
+                                                             PyQt5.QtWidgets.QMessageBox.NoButton)
+                        print(e.__class__)
+                        print(e)
+                else:
+                    message = self.socket.recv(1024).decode()
+                    self.chatBox.append(str(message) + "\n")
+
         except Exception as e:
             self.isRun = False
             PyQt5.QtWidgets.QMessageBox.question(self, 'Message', str(e), PyQt5.QtWidgets.QMessageBox.Yes,
@@ -155,8 +179,6 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
 
 
 def main():
-    # conn = UiChatClient()
-    # conn.run()
     app = PyQt5.QtWidgets.QApplication(sys.argv)
     window = QtWindow()
     window.setWindowTitle("채팅")
