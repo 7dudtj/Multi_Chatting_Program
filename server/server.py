@@ -1,6 +1,7 @@
 import socket
 import threading
-
+import time
+import os
 ################################################################
 class Room:  # Room class
     def __init__(self):
@@ -22,8 +23,14 @@ class Room:  # Room class
         self.waitUsers.remove(c)
 
     def sendMsgAll(self, msg):  # 채팅방에 있는 모든 유저한테 메시지 전송
+        # for dev
+        to = ""
         for i in self.chatUsers:
-            print(str(i.userName)+"에게 전송")
+            to = to + i.userName + ", "
+        print(str(to) + "에게 전송")
+        print("\"" + msg + "\"")
+        # main code
+        for i in self.chatUsers:
             i.sendMsg(msg)
 ################################################################
 
@@ -38,7 +45,7 @@ class chatClient:  # 채팅 유저 클래스
     def readMsg(self):
         # 유저의 닉네임 받아오기
         self.userName = self.soc.recv(1024).decode()
-        print(str(self.userName) + "한테서 받은 메세지: " + str(self.userName))
+        print(str(self.userName) + "한테서 받은 메세지: " + str(self.userName)) # for dev
 
         # 재접속 유저인지 확인
         reconnect = False
@@ -53,30 +60,57 @@ class chatClient:  # 채팅 유저 클래스
         # 채팅방 신규입장
         else:
             msg = self.userName + '님이 입장하셨습니다'
+        self.room.sendMsgAll('/text')
         self.room.sendMsgAll(msg)
 
         # 유저의 채팅을 받아오는 부분
         while True:
             try:
-                msg = self.soc.recv(1024).decode()  # 유저가 전송한 채팅 읽기
-                print(str(self.userName)+"한테서 받은 메세지: "+str(msg))
-                if msg == '/stop':  # 종료 메시지이면 루프 종료
+                msg = self.soc.recv(1024).decode()  # 유저의 시그널
+                # Text 시그널인 경우
+                if msg == '/text':
+                    msg = self.soc.recv(1024).decode() # 유저가 전송한 메세지
+                    print(str(self.userName) + "한테서 받은 메세지: " + str(msg)) # for dev
+                    msg = self.userName + ': ' + msg
+                    self.room.sendMsgAll('/text') # Text 시그널 전송
+                    self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
+                # Stop 시그널인 경우
+                elif msg == '/stop':
                     outmember = self.userName
                     self.room.del_chatUser(self) # 채팅방에서 퇴장
+                    self.room.sendMsgAll('/text')  # Text 시그널 전송
                     self.room.sendMsgAll(str(outmember)+"님이 퇴장하셨습니다.")
                     break
-                msg = self.userName+': '+ msg
-                self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
+                # File 시그널인 경우
+                elif msg == '/file':
+                    try:
+                        nowdir = os.getcwd()
+                        fileName = self.soc.recv(1024).decode()
+                        data = self.soc.recv(1024).decode()
+                        print("파일이름" + fileName)
+                        with open(nowdir + "\\" + fileName, 'w') as f:
+                            f.write(data)
+                            print("writing... " + data)
+                            while True:
+                                data = self.soc.recv(1024).decode()
+                                if data == "/fileEnd":
+                                    break
+                                f.write(data)
+                                print("writing... " + data)
+                            f.close()
+                    except Exception as e:
+                        print(e)
+                    print("파일 받기 완료")
             except Exception as e: # 에러가 발생할 경우
                 outuserName = self.userName # 퇴장 유저의 아이디
                 self.room.del_chatUser(self) # 채팅방에서 퇴장
                 self.room.add_waitUser(self) # 대기열으로 진입
+                self.room.sendMsgAll('/text')  # Text 시그널 전송
                 self.room.sendMsgAll(str(outuserName)+"님이 접속이 끊겼습니다.")
-                print(str(self.userName)+": 접속이 끊겼습니다.\n"+str(e))
+                print(str(self.userName)+": 접속이 끊겼습니다.\n"+str(e)) # for dev
                 break
 
     def sendMsg(self, msg):
-        print("\""+msg+"\"")
         self.soc.sendall(msg.encode(encoding='utf-8'))
 ################################################################
 
@@ -98,12 +132,12 @@ class ChatServer:
 
     def run(self):
         self.open()
-        print('서버 시작')
+        print('서버 시작') # for dev
 
         while True: # 유저 접속 대기중
-            print('client 접속 대기중')
+            print('client 접속 대기중') # for dev
             client_soc, addr = self.server_soc.accept()
-            print(addr, '접속 성공')
+            print(addr, '접속 성공') # for dev
             c = chatClient(self.room, client_soc) # 유저 객체 생성
             self.room.add_chatUser(c) # 채팅방에 유저 추가
             th = threading.Thread(target=c.readMsg)
@@ -117,6 +151,5 @@ class ChatServer:
 def main():
     cs = ChatServer() # 서버 생성
     cs.run() # 서버 가동
-
 
 main()
