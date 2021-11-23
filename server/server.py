@@ -53,6 +53,7 @@ class chatClient:  # 채팅 유저 클래스
         # 채팅방 신규입장
         else:
             msg = self.userName + '님이 입장하셨습니다'
+        self.room.sendMsgAll('/text')
         self.room.sendMsgAll(msg)
 
         # 유저의 채팅을 받아오는 부분
@@ -63,14 +64,21 @@ class chatClient:  # 채팅 유저 클래스
                 if msg == '/stop':  # 종료 메시지이면 루프 종료
                     outmember = self.userName
                     self.room.del_chatUser(self) # 채팅방에서 퇴장
+                    self.room.sendMsgAll('/text')
                     self.room.sendMsgAll(str(outmember)+"님이 퇴장하셨습니다.")
                     break
-                msg = self.userName+': '+ msg
-                self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
+                elif msg == '/text':
+                    msg = self.soc.recv(1024).decode()
+                    msg = self.userName + ': ' + msg
+                    self.room.sendMsgAll('/text')
+                    self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
+                else:
+                    continue
             except Exception as e: # 에러가 발생할 경우
                 outuserName = self.userName # 퇴장 유저의 아이디
                 self.room.del_chatUser(self) # 채팅방에서 퇴장
                 self.room.add_waitUser(self) # 대기열으로 진입
+                self.room.sendMsgAll('/text')
                 self.room.sendMsgAll(str(outuserName)+"님이 접속이 끊겼습니다.")
                 print(str(self.userName)+": 접속이 끊겼습니다.\n"+str(e))
                 break
