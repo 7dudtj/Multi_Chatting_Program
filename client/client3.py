@@ -118,6 +118,9 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
     def sendMessage(self, e):
         if self.isRun:
             message = self.inputMsg.toPlainText()
+            # 메세지 입력 없이 전송버튼 누를때 예외처리
+            if message == "":
+                return
             self.inputMsg.setPlainText("")
             message = message.encode(encoding='utf-8')
             try:
@@ -145,7 +148,7 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
                 with open(nowdir + "\\" + fileName, 'r') as f:
                     data = f.read(1024)
                     while data:
-                        self.socket.sendMessage(data.encode(encoding="utf-8"))
+                        self.socket.sendall(data.encode(encoding="utf-8"))
                         data = f.read(1024)
 
             except FileNotFoundError:
