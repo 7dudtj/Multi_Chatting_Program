@@ -62,14 +62,18 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
                     message = self.socket.recv(1024).decode()
                     self.chatBox.append(str(message) + "\n")
                 elif message == "/file":
+                    print("서버가 파일 보냄")
                     try:
                         nowdir = os.getcwd()
                         fileName = self.socket.recv(1024).decode()
+                        print("받은 파일이름: "+str(fileName))
+                        fileName = "To"+self.userName+"_"+fileName
                         data = self.socket.recv(1024).decode()
-                        with open(nowdir + "\\" + fileName, 'wb') as f:
-                            f.write(data)
-                            while data:
-                                data = self.socket.recv(1024).decode()
+                        print("파일 내용: "+str(data))
+                        with open(nowdir + "\\" + fileName, 'w') as f:
+                            f.write(str(data))
+                        f.close()
+                        print("파일 저장 완료")
 
                     except FileNotFoundError:
                         PyQt5.QtWidgets.QMessageBox.question(self, 'Message', '작성하신 파일명과 일치하는 파일이 존재하지 않습니다.',
@@ -90,30 +94,6 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
             self.isRun = False
             PyQt5.QtWidgets.QMessageBox.question(self, 'Message', str(e), PyQt5.QtWidgets.QMessageBox.Yes,
                                                  PyQt5.QtWidgets.QMessageBox.NoButton)
-
-    def readMessage(self):
-        message = self.socket.recv(1024).decode()
-        self.chatBox.append(str(message) + "\n")
-
-    def recieveFile(self):
-        try:
-            nowdir = os.getcwd()
-            fileName = self.socket.recv(1024).decode()
-            data = self.socket.recv(1024).decode()
-            with open(nowdir + "\\" + fileName, 'wb') as f:
-                f.write(data)
-                while data:
-                    data = self.socket.recv(1024).decode()
-
-        except FileNotFoundError:
-            PyQt5.QtWidgets.QMessageBox.question(self, 'Message', '작성하신 파일명과 일치하는 파일이 존재하지 않습니다.', PyQt5.QtWidgets.QMessageBox.Yes,
-                                                 PyQt5.QtWidgets.QMessageBox.NoButton)
-            self.inputFileName.setPlainText("")
-        except Exception as e:
-            PyQt5.QtWidgets.QMessageBox.question(self, 'Message', "파일 수신 실패: " + str(e), PyQt5.QtWidgets.QMessageBox.Yes,
-                                                 PyQt5.QtWidgets.QMessageBox.NoButton)
-            print(e.__class__)
-            print(e)
 
     def sendMessage(self, e):
         if self.isRun:
@@ -141,15 +121,16 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
             try:
                 nowdir = os.getcwd()
                 fileName = self.inputFileName.toPlainText().strip()
+                newfileName = "From"+self.userName+"_"+fileName
 
-                message = "/file".encode(encoding='utf-8')
-                self.socket.sendall(message)
+                self.socket.sendall("/file".encode(encoding='utf-8'))
+                self.socket.sendall(newfileName.encode(encoding='utf-8'))
 
                 with open(nowdir + "\\" + fileName, 'r') as f:
                     data = f.read(1024)
-                    while data:
-                        self.socket.sendall(data.encode(encoding="utf-8"))
-                        data = f.read(1024)
+                f.close()
+                self.socket.sendall(data.encode(encoding="utf-8"))
+                print("파일 전송 완료")
 
             except FileNotFoundError:
                 PyQt5.QtWidgets.QMessageBox.question(self, 'Message', '작성하신 파일명과 일치하는 파일이 존재하지 않습니다.', PyQt5.QtWidgets.QMessageBox.Yes,
@@ -180,6 +161,8 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
         QCoreApplication.instance().quit()
         sys.exit(1)
 
+    def closeEvent(self, event):
+        self.deleteLater()
 
 def main():
     app = PyQt5.QtWidgets.QApplication(sys.argv)
