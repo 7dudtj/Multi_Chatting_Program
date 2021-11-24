@@ -117,6 +117,8 @@ class ChatServer:
             th = threading.Thread(target=c.readMsg)
             th.start()
 
+
+
         # 서버는 종료되지 않기에
         # 소켓을 닫지 않고 계속 가동
 ################################################################
