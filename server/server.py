@@ -1,5 +1,6 @@
 import socket
 import threading
+import os
 
 ################################################################
 class Room:  # Room class
@@ -61,19 +62,44 @@ class chatClient:  # 채팅 유저 클래스
             try:
                 msg = self.soc.recv(1024).decode()  # 유저가 전송한 채팅 읽기
                 print(str(self.userName)+"한테서 받은 메세지: "+str(msg))
-                if msg == '/stop':  # 종료 메시지이면 루프 종료
+                # 종료 메시지이면 루프 종료
+                if msg == '/stop':
                     outmember = self.userName
                     self.room.del_chatUser(self) # 채팅방에서 퇴장
                     self.room.sendMsgAll('/text')
                     self.room.sendMsgAll(str(outmember)+"님이 퇴장하셨습니다.")
                     break
+                # 텍스트 수신
                 elif msg == '/text':
                     msg = self.soc.recv(1024).decode()
                     msg = self.userName + ': ' + msg
                     self.room.sendMsgAll('/text')
                     self.room.sendMsgAll(msg)  # 모든 사용자에 메시지 전송
-                else:
-                    continue
+                # 파일 수신
+                elif msg == '/file':
+                    # 유저로부터 파일 수신
+                    nowdir = os.getcwd()
+                    fileName = self.soc.recv(1024).decode() # 파일 이름 받기
+                    data = self.soc.recv(1024).decode() # 파일 내용 받기
+                    print("파일 수신 완료")
+                    with open(nowdir + "\\" + fileName, 'w') as f:
+                        f.write(str(data))
+                    f.close()
+                    print("파일 저장 완료")
+
+                    # 모든 유저들에게 파일 전송
+                    self.room.sendMsgAll('/text')
+                    self.room.sendMsgAll(self.userName+"님이 파일을 보냈습니다")
+                    with open(nowdir + "\\" + fileName, 'r') as f:
+                        data = f.read(1024)
+                    f.close()
+                    self.room.sendMsgAll('/file')
+                    self.room.sendMsgAll(fileName)
+                    self.room.sendMsgAll(data)
+                    print("파일 전송 완료")
+                    os.remove(nowdir + "\\" + fileName)
+                    print("서버측 파일 삭제 완료")
+
             except Exception as e: # 에러가 발생할 경우
                 outuserName = self.userName # 퇴장 유저의 아이디
                 self.room.del_chatUser(self) # 채팅방에서 퇴장
