@@ -7,7 +7,7 @@ from PyQt5.QtCore import QCoreApplication
 from PyQt5 import uic
 import os
 
-ui_form = uic.loadUiType("test.ui")[0]
+ui_form = uic.loadUiType("client.ui")[0]
 
 class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
 
