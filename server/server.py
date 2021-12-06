@@ -50,10 +50,10 @@ class chatClient:  # 채팅 유저 클래스
 
         # 채팅방 재입장
         if (reconnect):
-            msg = self.userName + '님이 재접속했습니다'
+            msg = self.userName + '님이 재접속했습니다.'
         # 채팅방 신규입장
         else:
-            msg = self.userName + '님이 입장하셨습니다'
+            msg = self.userName + '님이 입장하셨습니다.'
         self.room.sendMsgAll('/text')
         self.room.sendMsgAll(msg)
 
@@ -89,7 +89,7 @@ class chatClient:  # 채팅 유저 클래스
 
                     # 모든 유저들에게 파일 전송
                     self.room.sendMsgAll('/text')
-                    self.room.sendMsgAll(self.userName+"님이 파일을 보냈습니다")
+                    self.room.sendMsgAll(self.userName+"님이 파일을 보냈습니다.")
                     with open(nowdir + "\\" + fileName, 'r') as f:
                         data = f.read(1024)
                     f.close()
