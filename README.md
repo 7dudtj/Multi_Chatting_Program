@@ -7,9 +7,9 @@ Click below and read out report!
 ## ⚙ 기술 스택 (Technique Used)
 
 - ### Front-end
-Python & PyQt5
-:---:
-![python&pyqt5 icon](https://user-images.githubusercontent.com/67851701/144781666-b565f0e8-5da3-4c21-9900-de12f6295723.png)
+Python | PyQt5
+:---: | :---:
+![python icon](https://user-images.githubusercontent.com/67851701/144780249-04ac7a37-36b4-4b15-9ac7-6404eb58ecf6.png) | ![pyqt5 icon](https://user-images.githubusercontent.com/67851701/144781878-61850476-45f5-41a6-a21d-e564f0a87ec8.png)
 
 - ### Back-end
 Python
