@@ -1,7 +1,7 @@
 # Multi_Chatting_Program
 
 ## What is Multi Chatting Program?
-Click below and read out report!
+Click below and read out report!  
 [MultiChattingProgramReport.pdf](https://github.com/7dudtj/Multi_Chatting_Program/files/7657708/MultiChattingProgramReport.pdf)
 
 ## ⚙ 기술 스택 (Technique Used)
