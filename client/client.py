@@ -42,7 +42,7 @@ class QtWindow(PyQt5.QtWidgets.QMainWindow, ui_form):
 
                 thread = threading.Thread(target=self.receive)
                 thread.daemon = True
-                thread.start()
+                thread.start() 
                 print("서버와 연결했습니다")
             except socket.gaierror:
                 PyQt5.QtWidgets.QMessageBox.question(self, 'Message', "잘못된 IP와 PORT입니다.", PyQt5.QtWidgets.QMessageBox.Yes,
