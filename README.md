@@ -9,12 +9,12 @@ Click below and read out report!
 - ### Front-end
 Python | PyQt5
 :---: | :---:
-![python icon](https://user-images.githubusercontent.com/67851701/144780249-04ac7a37-36b4-4b15-9ac7-6404eb58ecf6.png) | ![pyqt5 icon](https://user-images.githubusercontent.com/67851701/144781878-61850476-45f5-41a6-a21d-e564f0a87ec8.png)
+<img src="https://user-images.githubusercontent.com/67851701/194449792-384eb1f2-dbbf-4a94-b2f6-f94e54aaca9b.png"  width="120" height="120"/> | <img src="https://user-images.githubusercontent.com/67851701/144781878-61850476-45f5-41a6-a21d-e564f0a87ec8.png"  width="120" height="120"/>
 
 - ### Back-end
 Python
 :---:
-![python icon](https://user-images.githubusercontent.com/67851701/144780249-04ac7a37-36b4-4b15-9ac7-6404eb58ecf6.png)
+<img src="https://user-images.githubusercontent.com/67851701/194449792-384eb1f2-dbbf-4a94-b2f6-f94e54aaca9b.png"  width="120" height="120"/> |
 
 ## 팀 정보 (Team Information)
 
